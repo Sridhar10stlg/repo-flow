@@ -6,13 +6,13 @@ These guidelines apply to Claude Code working in this repository, to any AI tool
 
 - Repo Flow builds only what AI coding tools can't do. The extension is the attention layer. The user-defined flow, file edits, moves, and commits belong to the AI tool, following the kit.
 - Before designing a feature, check the overlap audit in [Plan.md](Plan.md). If the AI tool already provides the feature, use it instead of rebuilding it.
-- The extension is **read-only** on repository files. When a change is needed, it gives the developer a prompt to copy into the AI tool. The only exception is the approval-gated set-up command that copies the kit into `docs/repo-flow/`.
+- The extension is **read-only** on repository files. When a change is needed, it gives the developer a prompt to copy into the AI tool. The kit is installed once per machine in `~/.claude/skills/repo-flow/` and is never copied into repositories.
 
 ## 2. Follow the developer's flow, not a fixed one
 
-- The steps a task goes through come from the developer's **flow definition**, an editable Markdown file in the kit. The six-step default is only a starting point.
+- The steps a task goes through come from the developer's **flow definition**, an editable Markdown list. The six-step default is only a starting point.
 - Read the flow definition at the start of a session and follow its steps, order, and approval markers exactly. Don't add, drop, or reorder steps on your own; suggest changes instead.
-- **Effective flow:** if the task file has a "## Flow" section, use it. Otherwise use the repository flow file.
+- **Effective flow:** use the first that exists: the task file's "## Flow" section, the repository's `docs/repo-flow/flow.md`, or the personal `~/.claude/skills/repo-flow/flow.md`.
 - The format is a numbered list. A note after a colon (for example "Committing: approval required") is an instruction or approval checkpoint for that step.
 - If the flow is missing, unclear, or contradicts itself, ask before continuing.
 - The flow can add approval checkpoints but can never remove the required ones in section 7 (project file changes, task moves, commits, data leaving the machine).
@@ -21,7 +21,7 @@ These guidelines apply to Claude Code working in this repository, to any AI tool
 
 - Read task input **only** from Markdown files under `docs/to-do/` (subfolders included).
 - Don't infer tasks from code comments, TODOs, issues, other Markdown files, or `docs/completed/`.
-- The repository flow file (`docs/repo-flow/flow.md`) is configuration, not task input. `README.md` files in `docs/to-do/` are not tasks. The extension may read it to show progress, and that is the only file outside `docs/to-do/` it reads.
+- Flow files are configuration, not task input: the optional repository flow `docs/repo-flow/flow.md` and the personal default `~/.claude/skills/repo-flow/flow.md`. The extension may read them to show progress. They're the only files outside `docs/to-do/` it reads. `README.md` files in `docs/to-do/` are not tasks.
 - When following the kit's completion move, only check whether the destination path in `docs/completed/` exists. Never list or parse completed tasks.
 
 ## 4. Task discovery is not impact analysis

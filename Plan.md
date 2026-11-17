@@ -2,7 +2,7 @@
 
 Phased roadmap for Repo Flow. See [README.md](README.md) for the overview, [CLAUDE.md](CLAUDE.md) for working rules, and [AI_Guidelines.md](AI_Guidelines.md) for AI-specific guidance.
 
-**Current phase: 0.1.0 (Product specification and overlap audit).** Nothing is implemented.
+**Current phase: 0.2.0 (Workflow kit).** Phase 0.1.0 completed on 2026-11-17. No extension code exists.
 
 Labels used in this document:
 - **Requirement:** firm. Change it only with the developer's explicit approval.
@@ -39,8 +39,8 @@ Repo Flow has two parts:
 ## Firm requirements (all phases)
 
 1. **No duplication.** Before building any feature, check whether the developer's AI tools already provide it. Record the evidence. Drop the feature if they do (see "Overlap audit").
-2. **The extension is read-only on repository files.** It never creates, edits, moves, or deletes them, and all file changes go through the AI tool following the kit. **One named exception:** the one-time "Repo Flow: Set up this repository" command, which copies the kit into `docs/repo-flow/` after showing exactly what it will add and getting approval.
-3. Task input is read **only** from Markdown files under `docs/to-do/`, subfolders included (`README.md` files are ignored). This applies to the extension and to the kit. **One named exception:** the extension may also read the repository's flow file, `docs/repo-flow/flow.md`, as configuration (never as task input).
+2. **The extension is read-only on repository files.** It never creates, edits, moves, or deletes them, and all file changes go through the AI tool following the kit. The kit is installed **once per machine**, in `~/.claude/skills/repo-flow/`, and is never copied into repositories. The extension's "Install or update Repo Flow" command writes only there, after showing exactly what it will add and getting approval.
+3. Task input is read **only** from Markdown files under `docs/to-do/`, subfolders included (`README.md` files are ignored). This applies to the extension and to the kit. **Named exception:** the extension may also read flow files, as configuration and never as task input. These are the optional repository flow `docs/repo-flow/flow.md` and the personal default `~/.claude/skills/repo-flow/flow.md`.
 4. Completed tasks move from `docs/to-do/` to `docs/completed/`. The AI tool does the move, following the kit's completion-move rules.
 5. Task discovery is separate from impact analysis. Impact analysis is deliberate, bounded, and lists the files it inspected.
 6. Questions and answers happen in the developer's AI coding tool chat (Claude Code by default). There is no separate to-do agent chat.
@@ -93,8 +93,8 @@ Repo Flow has two parts:
 - [x] The flow definition format is decided (a numbered list with optional notes), with the six-step default and approval markers shown (2026-11-17).
 - [x] Where flows live is decided: a repository flow file plus an optional per-task override (2026-11-17).
 - [x] Extension language decided: TypeScript (2026-11-17). Minimum VS Code version and tooling decided as rules (2026-11-17); the concrete values are pinned at scaffolding.
-- [x] Kit location (`docs/repo-flow/`) and installation method (approval-gated set-up command) are recorded in the Decision log (2026-11-17).
-- [ ] Baseline log entries exist for at least 5 working days.
+- [x] Kit location and installation method are recorded in the Decision log (2026-11-17; revised the same day to a one-time install in `~/.claude/skills/repo-flow/`).
+- [x] Baseline log entries exist for at least 5 working days (2026-11-10 to 2026-11-14, kept privately outside the repository). *Caveat:* filled in retrospectively from memory, not at the end of each day, so it's less reliable than a same-day log.
 
 **Dependencies:** none.
 
@@ -143,7 +143,7 @@ Repo Flow has two parts:
 - **Flow progress:** reads the task's effective flow (its own "## Flow" section if it has one, otherwise the repository flow file) and shows, for example, "Step 3 of 5: Questions and answers. Next: Recording decisions". If the `stage` doesn't match any step, or there's no flow file, it shows the `stage` text with a gentle warning.
 - **Start session:** copies a short prompt to the clipboard. The prompt names the task file and tells the AI tool to continue it using the kit. On a resume, it also asks the tool to summarize where work stopped. **For Claude Code (decided 2026-11-17):** open a new Claude Code tab with the prompt pre-filled through the documented URI handler. The developer presses Enter. The clipboard is the fallback for Codex and other tools, or if the link fails. This depends on the 0.1.0 experiment (audit row 8).
 - **Copy-prompt actions** instead of file edits: "Fix front matter", "Archive this task", "Create a task". The extension never writes task files itself.
-- **"Repo Flow: Set up this repository" command:** copies the kit (`docs/repo-flow/workflow.md`, `docs/repo-flow/flow.md` with the default flow, and the per-tool adapters) after showing the file list and getting approval. Existing files are never overwritten. Only missing files are copied, and existing ones are reported as "kept" (Decided).
+- **"Repo Flow: Install or update" command:** installs the kit from the extension into `~/.claude/skills/repo-flow/` (`SKILL.md`, `workflow.md`, `task-template.md`, and `flow.md` with the default flow) after showing the file list and getting approval. Kit files are updated, but the developer's `flow.md` is never overwritten. Nothing is written into repositories. A repository only needs `docs/to-do/`, which `/repo-flow new` creates (Decided).
 - **Resume card:** after a configurable inactivity gap (or on VS Code focus), shows the current task, its Resume note, how old that note is, and a Start session button.
 - **Break mode:** "I'm on a break" pauses all nudges until you return or until a chosen time. The state is stored locally, outside the repository.
 - **Planned-start reminder:** a local VS Code notification at a task's planned start time.
@@ -158,8 +158,8 @@ Repo Flow has two parts:
 **Success criteria**
 - [ ] Fixture-repository tests: only `docs/to-do/**/*.md` files are listed. Markdown files elsewhere (repo root, `docs/`, `docs/completed/`, `src/`) never are.
 - [ ] Each malformed-input case from 0.1.0 has a test showing the specified display.
-- [ ] Tests and code review show that the extension makes no repository writes apart from the approved set-up command, and no network calls.
-- [ ] Set-up command tests: cancelling writes nothing, approving writes exactly the listed files, and existing kit files are left untouched.
+- [ ] Tests and code review show that the extension makes no repository writes at all, and no network calls.
+- [ ] Install command tests: cancelling writes nothing, approving writes exactly the listed files in `~/.claude/skills/repo-flow/`, and an existing personal `flow.md` is left untouched.
 - [ ] From a freshly opened VS Code window, the selected task's next action is visible in **2 interactions or fewer** (manual test script).
 - [ ] Flow progress tests: the repository flow, a task override, a non-default custom flow, a missing flow file, and a `stage` that matches no step each give the specified display. The only file read outside `docs/to-do/` is the flow file (test plus code review).
 - [ ] No reminder appears when reminders are off, outside working hours, during break mode, or above the daily cap (tests with a simulated clock).
@@ -182,7 +182,7 @@ Repo Flow has two parts:
   - VS Code window focus,
   - editor and terminal activity in the workspace (timestamps only, no content),
   - changes to the task file (`stage`, `next_action`),
-  - AI tool session events (verified by E2). These come from an opt-in hook in the kit's Claude Code adapter. The hook writes only the event name, time, and session ID to a local file in the developer's home folder, never in the repository, and the extension reads that file. It is installed only by the approval-gated set-up command, and the same 90-day retention applies.
+  - AI tool session events (verified by E2). These come from an opt-in hook in the kit's Claude Code adapter. The hook writes only the event name, time, and session ID to a local file in the developer's home folder, never in the repository, and the extension reads that file. It is installed only by the approval-gated install command, into user-level Claude Code settings, and the same 90-day retention applies.
 - **Retention:** 90 days for activity and feedback data, then automatic deletion. A "Delete all Repo Flow data" command is always available.
 - ~~A light overview of which tasks have a session that has gone quiet.~~ Removed: Claude Code's agent view already covers this (overlap audit row 7).
 - One-click "helpful / not now / not helpful" feedback on each nudge, stored locally.
@@ -341,7 +341,7 @@ Verdicts: **Provided** / **Partly provided** / **Not provided** (no feature foun
 |---|---|---|---|---|
 | 1 | Edit task files, record decisions, `git mv`, commit | **Provided** (core function) | **Provided** (core function) | Already assigned to the AI tool through the kit. No change. |
 | 2 | Follow a written workflow from repository instructions | **Provided**: skills are Markdown instructions Claude follows ([skills](https://code.claude.com/docs/en/skills)) | **Provided**: `AGENTS.md` guidance is loaded at session start ([config](https://developers.openai.com/codex/config-advanced)) | Confirms the kit approach. |
-| 3 | Custom command or skill to start the workflow | **Provided**: `.claude/skills/<name>/SKILL.md` creates `/<name>`; the older `.claude/commands/` format still works ([skills](https://code.claude.com/docs/en/skills)) | **Provided**: `/skills` ([CLI reference](https://developers.openai.com/codex/cli/reference)). Custom prompts in `~/.codex/prompts/`: Unverified (third-party sources only) | Adapters: a Claude Code skill (for example `/repo-flow`), and for Codex an `AGENTS.md` pointer plus a skill. |
+| 3 | Custom command or skill to start the workflow | **Provided**: `.claude/skills/<name>/SKILL.md` creates `/<name>`; the older `.claude/commands/` format still works ([skills](https://code.claude.com/docs/en/skills)) | **Provided**: `/skills` ([CLI reference](https://developers.openai.com/codex/cli/reference)). Custom prompts in `~/.codex/prompts/`: Unverified (third-party sources only) | Adapter: a personal Claude Code skill, `~/.claude/skills/repo-flow/` (`/repo-flow`), installed once per machine. |
 | 4 | Resume a previous AI session | **Provided**: `claude --continue`, `claude --resume [name or id]` ([sessions](https://code.claude.com/docs/en/sessions)) | **Provided**: `codex resume` ([CLI reference](https://developers.openai.com/codex/cli/reference)) | Repo Flow doesn't track session history. The resume card may *suggest* the tool's own resume command. |
 | 5 | Notify when a session is waiting for input | **Provided**: Notification hook types such as `permission_prompt`, `idle_prompt`, `agent_needs_input`, `agent_completed` ([hooks](https://code.claude.com/docs/en/hooks)). Phone push when it needs a decision (Remote Control; [mobile](https://code.claude.com/docs/en/mobile)) | **Partly provided**: `notify` runs a program on `agent-turn-complete` only ([config](https://developers.openai.com/codex/config-advanced)) | **Removed from Repo Flow.** It never sends "session is waiting" notifications. |
 | 6 | Hooks or events that report session activity | **Provided, verified by E2** (no `Notification` seen when idle): `SessionStart`, `SessionEnd`, `UserPromptSubmit`, `Stop`, `Notification` ([hooks](https://code.claude.com/docs/en/hooks)) | **Provided**: `SessionStart`, `SessionEnd`, `Stop` and others, via `hooks.json` or `config.toml` ([hooks](https://developers.openai.com/codex/hooks)) | The "AI tool session events" signal is feasible: a hook in the kit's adapter could record timestamps locally for the extension. **Experiment needed.** Design decision below. |
@@ -497,7 +497,12 @@ The AI tool reads the effective flow at the start of each session. The default f
 
 - Steps can be renamed, reordered, added, or removed by editing this list.
 - Required approvals (firm requirement 7) apply whatever the flow says.
-- **Location (decided):** `docs/repo-flow/flow.md`. The workflow instructions are in `docs/repo-flow/workflow.md` (Decided).
+- **Locations (decided, revised 2026-11-17), highest priority first:**
+  1. the task's `## Flow` section,
+  2. the optional repository flow `docs/repo-flow/flow.md`,
+  3. the personal default `~/.claude/skills/repo-flow/flow.md`.
+
+  The workflow instructions are in `~/.claude/skills/repo-flow/workflow.md`. Their source is `kit/repo-flow/` in this repository.
 
 ---
 
@@ -519,7 +524,7 @@ These outcomes are about behavior and can't be measured automatically with any c
 Resolved items are in the Decision log. Still open:
 
 **Need checking during a later phase:**
-1. The Claude Code adapter: a skill at `.claude/skills/<name>/SKILL.md` (supported according to the docs, audit row 3). Confirm it on a real task in 0.2.0.
+1. The personal Claude Code skill at `~/.claude/skills/repo-flow/` (supported according to the docs, audit row 3). Confirm it on a real task in 0.2.0.
 2. Retest E3 (cloud routine push) in the 0.5.0 overlap audit.
 
 **Deferred to a later phase by design:**
@@ -527,7 +532,6 @@ Resolved items are in the Decision log. Still open:
 4. Hosted reminder channel and provider (0.6.0). E3 failed, so this is needed unless a 0.5.0 retest passes.
 5. Definition of "session usage" (0.7.0).
 6. Whether 0.8.0 happens at all (0.5.0).
-7. A personal default flow across repositories (not planned now).
 
 ## Decision log
 
@@ -555,8 +559,8 @@ Resolved items are in the Decision log. Still open:
 | 2026-11-17 | Flow format: a numbered Markdown list with optional notes after a colon (for example "Committing: approval required"). | Easy to edit by hand and reliably read by AI tools. |
 | 2026-11-17 | The extension may read the flow file (as configuration) and a task's "## Flow" section, to show step progress. This is a named exception to reading only `docs/to-do/`. | A "Step 3 of 5, next: …" hint helps with resuming. Limited to exactly one non-task file. |
 | 2026-11-17 | The task flow is user-defined and editable. The six steps are only the default. The AI tool follows the developer's flow, and nothing hardcodes step names. Required approvals can't be removed by a flow. | Developer direction. People work differently, and the flow should fit the individual. |
-| 2026-11-17 | Kit location: `docs/repo-flow/` (the flow file is `docs/repo-flow/flow.md`). | Visible, next to `docs/to-do/`, and committed with the repository. |
-| 2026-11-17 | Kit installation: an extension command, "Repo Flow: Set up this repository", copies the kit after showing the files and getting approval. A named exception to the read-only rule. | One deliberate, approval-gated step is more predictable than asking an AI tool to recreate the kit. |
+| 2026-11-17 | ~~Kit location: `docs/repo-flow/` (the flow file is `docs/repo-flow/flow.md`).~~ Superseded the same day: see the install-once decision below. | Visible, next to `docs/to-do/`, and committed with the repository. |
+| 2026-11-17 | ~~Kit installation: an extension command, "Repo Flow: Set up this repository", copies the kit after showing the files and getting approval. A named exception to the read-only rule.~~ Superseded the same day. | One deliberate, approval-gated step is more predictable than asking an AI tool to recreate the kit. |
 | 2026-11-17 | `start_at` (planned start) lives in task front matter. | Visible and tool-neutral, and the extension stays read-only. |
 | 2026-11-17 | Status values: `todo`, `in-progress`, `blocked`, `done`. | `blocked` explains why a task isn't the next one to pick. |
 | 2026-11-17 | Duplicate IDs: show both files with a conflict warning and a fix prompt. | Nothing is hidden. |
@@ -568,8 +572,8 @@ Resolved items are in the Decision log. Still open:
 | 2026-11-17 | Minimum VS Code version: the version current at scaffolding, minus about 3 months. Tooling: the official extension generator defaults, verified at scaffolding. | Latest APIs and the least custom setup. |
 | 2026-11-17 | Malformed fields: a missing `id` → "needs setup"; an unknown `status` → "Needs attention"; an invalid date → a warning and no reminder. | Nothing is hidden, and only real setup problems keep a task out of the normal list. |
 | 2026-11-17 | Task files over about 1 MB: only the front matter is read, with a "large file" note. | Keeps VS Code responsive and still shows the next action. |
-| 2026-11-17 | The set-up command never overwrites existing kit files. It copies missing files and reports existing ones as "kept". | Protects the developer's edited `flow.md`. |
-| 2026-11-17 | Kit files: `docs/repo-flow/workflow.md` (instructions for the AI tool) and `docs/repo-flow/flow.md` (the editable steps). | Keeping the developer's flow separate from the kit's instructions makes kit upgrades safe. |
+| 2026-11-17 | The install command never overwrites the developer's `flow.md`. (Originally written for the per-repo set-up command.) | Protects the developer's edited `flow.md`. |
+| 2026-11-17 | Kit files: `workflow.md` (instructions for the AI tool) and `flow.md` (the editable steps), now in `~/.claude/skills/repo-flow/`. | Keeping the developer's flow separate from the kit's instructions makes kit upgrades safe. |
 | 2026-11-17 | A missing `title` falls back to the first `#` heading, then to the filename without the ID prefix. | The task still looks normal, and a title isn't worth a warning. |
 | 2026-11-17 | Overlap audit, first pass: "session waiting for input" notifications and the multi-session overview are removed from Repo Flow (Claude Code provides them). Task visibility, resume cards, break mode, and planned-start reminders and nudges are confirmed as gaps. | Evidence in the "Overlap audit" section. |
 | 2026-11-17 | Start session for Claude Code: open a tab with the prompt pre-filled through the documented URI handler. Clipboard as the fallback. Depends on experiment E1. | One fewer step to start, and the developer still presses Enter. |
@@ -579,3 +583,5 @@ Resolved items are in the Decision log. Still open:
 | 2026-11-17 | Session events reach the extension through an opt-in kit hook that writes event name, time, and session ID to a local file in the home folder. The extension reads it. Idle time = time since the last `Stop` with no later `UserPromptSubmit`. | Proven by E2, keeps content out, and doesn't depend on `Notification`. |
 | 2026-11-17 | E3 failed: the cloud routine fired with the laptop asleep and requested a push twice, but nothing reached the phone. Phase 0.6.0 moves to step 2 (evaluate hosted services). Routine pushes are retested in the 0.5.0 audit. | Laptop-off reminders can't depend on a research-preview feature that didn't deliver. |
 | 2026-11-17 | Codex is out of scope. The developer won't use it. The kit stays tool-neutral Markdown, but only the Claude Code adapter is built. | Avoids work for a tool that won't be used. Another adapter can be added later if needed. |
+| 2026-11-17 | Phase 0.1.0 complete. Phase 0.2.0 (workflow kit) started. | All nine 0.1.0 success criteria met. The baseline caveat is noted on its criterion. |
+| 2026-11-17 | **Install once, not per repo.** The kit (skill, workflow, template, and the personal default flow) is installed once per machine in `~/.claude/skills/repo-flow/`, from its source in `kit/repo-flow/`. A repository needs only `docs/to-do/`, plus an optional `docs/repo-flow/flow.md` override. Effective flow: task `## Flow`, then repository flow, then personal default. The extension becomes fully read-only on repositories. Its install command writes only to the home folder. Supersedes the per-repo kit and set-up command, and resolves the deferred "personal default flow" item. | No copies drifting apart between repositories, and no Repo Flow files committed into work repositories. Claude Code supports personal skills. Trade-off: the kit doesn't travel with a repository, which is fine for a single-developer tool. |

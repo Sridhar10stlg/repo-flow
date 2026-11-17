@@ -6,7 +6,7 @@ Instructions for Claude Code working in the Repo Flow repository.
 
 Repo Flow is a planned VS Code extension plus a Markdown workflow kit. It helps one developer start, keep moving, and resume AI-driven development tasks. See [README.md](README.md) for the overview.
 
-**Current status: planning (Phase 0.1.0 in [Plan.md](Plan.md)).** No extension code or kit files exist yet. Don't describe any feature as implemented. Don't scaffold, install dependencies, or write application code until the plan says the relevant phase has started and the developer asks for it.
+**Current status: Phase 0.2.0 (workflow kit) in [Plan.md](Plan.md).** The kit's source is in `kit/repo-flow/` (`SKILL.md`, `workflow.md`, `flow.md`, `task-template.md`). It's installed once per machine, in `~/.claude/skills/repo-flow/`, as the personal `/repo-flow` skill. Tasks for this repository go in `docs/to-do/`. When you change the kit, edit `kit/repo-flow/`, then reinstall the copy without overwriting the developer's personal `flow.md`. The user guide is [docs/USER_GUIDE.md](docs/USER_GUIDE.md). No extension code exists yet. Don't scaffold, install dependencies, or write extension code until Phase 0.3.0 starts and the developer asks for it. Don't describe a feature as working until its success criteria are met.
 
 ## Core principle: build only what AI coding tools can't do
 
@@ -29,10 +29,10 @@ An idle session is **not** proof of procrastination. The developer may be thinki
 
 ## Hard rules
 
-1. **The extension is read-only on repository files.** It never creates, edits, moves, or deletes them. Where a change is needed, the extension offers a "copy prompt" action and the AI tool does the work. The one exception is the approval-gated "Repo Flow: Set up this repository" command, which copies the kit into `docs/repo-flow/`.
-2. **Task-file boundary.** Task input comes only from Markdown files under `docs/to-do/` (subfolders included, `README.md` files ignored). This applies to the extension and to the kit. One named exception: the extension may read the repository flow file `docs/repo-flow/flow.md`, as configuration and never as task input. Completed tasks move to `docs/completed/` only after confirmation, following the completion-move rules in [Plan.md](Plan.md). `docs/completed/` may only be checked for whether a destination path exists. It's never listed or parsed.
+1. **The extension is read-only on repository files.** It never creates, edits, moves, or deletes them. Where a change is needed, the extension offers a "copy prompt" action and the AI tool does the work. The kit is never copied into repositories. It's installed once in `~/.claude/skills/repo-flow/`, and the extension's install command writes only there, with approval.
+2. **Task-file boundary.** Task input comes only from Markdown files under `docs/to-do/` (subfolders included, `README.md` files ignored). This applies to the extension and to the kit. Named exception: the extension may read flow files, as configuration and never as task input. These are the optional `docs/repo-flow/flow.md` in a repository and the personal `~/.claude/skills/repo-flow/flow.md`. Completed tasks move to `docs/completed/` only after confirmation, following the completion-move rules in [Plan.md](Plan.md). `docs/completed/` may only be checked for whether a destination path exists. It's never listed or parsed.
 3. **Discovery is not impact analysis.** Impact analysis may read project files, but only deliberately and within bounds, and it must list every file it inspected.
-4. **The flow is user-defined.** Never hardcode the default six steps in the kit, the extension, or examples presented as rules. Follow the steps in the effective flow: the task's own "## Flow" section if it has one, otherwise the repository flow file. The format is a numbered list with optional notes after a colon. No flow edit removes rule 7 (approval).
+4. **The flow is user-defined.** Never hardcode the default six steps in the kit, the extension, or examples presented as rules. Follow the steps in the effective flow: the task's own "## Flow" section, then the repository's optional `docs/repo-flow/flow.md`, then the personal `~/.claude/skills/repo-flow/flow.md`. The format is a numbered list with optional notes after a colon. No flow edit removes rule 7 (approval).
 5. **Q&A happens in the AI tool's chat.** Don't design a separate to-do agent chat.
 6. **No assumed integration APIs.** Every mechanism must have evidence in the overlap audit in [Plan.md](Plan.md), and rows marked "Experiment needed" must pass their experiment before anything depends on them. Current plan: Start session pre-fills a Claude Code tab through the documented URI handler, with the clipboard as the fallback. Repo Flow never repeats notifications the AI tool already sends.
 7. **Human approval** before changing project files, moving or renaming task files, committing, or sending data off the machine.
@@ -67,4 +67,4 @@ An idle session is **not** proof of procrastination. The developer may be thinki
 
 - The extension language is **TypeScript** (decided 2026-11-17). The existing `.gitignore` is still a Python template. Replace it with TypeScript/Node entries when extension scaffolding starts in Phase 0.3.0, not before.
 - The extension stores its local state (break mode, settings, activity signals, feedback) in VS Code's own storage, not in the repository. It is kept for 90 days.
-- The workflow kit lives in `docs/repo-flow/`.
+- The workflow kit's source is `kit/repo-flow/`. The installed copy is `~/.claude/skills/repo-flow/`.
